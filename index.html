@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TourAPI v4.3 URL Builder</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(148, 163, 184, 0.2);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin: 0;
+            background: linear-gradient(135deg, #60a5fa, #c084fc);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: var(--glass-shadow);
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(148, 163, 184, 0.4);
+        }
+
+        .card-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .grid-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        input,
+        select {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        select option {
+            background: #1e293b;
+            color: var(--text-primary);
+        }
+
+        .url-output {
+            background: #000;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            color: #4ade80;
+            word-break: break-all;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            flex: 1;
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+        }
+
+        button.secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        button.secondary:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+        }
+
+        .param-grid {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>TourAPI v4.3 URL Builder</h1>
+
+        <!-- Base Configuration -->
+        <div class="card">
+            <div class="card-header">📡 API Configuration</div>
+            <div class="grid-form">
+                <input type="hidden" id="orgCode" value="B551011">
+                <input type="hidden" id="serviceName" value="KorService2">
+                <div class="form-group">
+                    <label>오퍼레이션 (Operation)</label>
+                    <select id="operation">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Parameters -->
+        <div class="card">
+            <div class="card-header">⚙️ Request Parameters</div>
+
+            <!-- Common Params -->
+            <div class="grid-form">
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>Service Key (인증키)</label>
+                    <input type="text" id="serviceKey"
+                        value="48039ceb468498d341175aecd262314e666e1d930f9f6c61fd97a712baa22756"
+                        placeholder="Decoding Key">
+                </div>
+                <div class="form-group">
+                    <label>numOfRows (페이지당 건수)</label>
+                    <select id="numOfRows">
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="500">500</option>
+                        <option value="1000">1000</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>pageNo (페이지 번호)</label>
+                    <select id="pageNo">
+                        <option value="1" selected>1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>MobileOS</label>
+                    <select id="mobileOS">
+                        <option value="ETC" selected>ETC</option>
+                        <option value="AND">AND</option>
+                        <option value="IOS">IOS</option>
+                        <option value="WIN">WIN</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>MobileApp</label>
+                    <input type="text" id="mobileApp" value="AppTest">
+                </div>
+                <div class="form-group">
+                    <label>_type</label>
+                    <select id="type">
+                        <option value="json" selected>JSON</option>
+                        <option value="xml">XML</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr style="border-color: var(--border-color); opacity: 0.3; margin: 1.5rem 0;">
+
+            <!-- Dynamic Specific Params -->
+            <div id="dynamicParams" class="param-grid">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+
+        <!-- Output -->
+        <div class="card">
+            <div class="card-header">🔗 Generated URL</div>
+            <div class="url-output" id="urlOutput">
+                https://apis.data.go.kr/...
+            </div>
+            <div class="actions">
+                <button class="secondary" onclick="copyUrl()">Copy URL</button>
+                <button onclick="testCall()">Test Call 🚀</button>
+            </div>
+
+            <!-- Status Check -->
+            <div style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-weight: 600; font-size: 0.9rem;">📡 Connection Status</span>
+                    <button class="secondary" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;"
+                        onclick="checkStatus()">Check Health</button>
+                </div>
+                <div id="statusOutput" style="font-size: 0.85rem; color: var(--text-secondary); min-height: 1.2em;">
+                    Ready to check...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = "https://apis.data.go.kr";
+
+        // v4.3 Operations & Specific Params
+        const operationsMap = {
+            "areaBasedList2": {
+                desc: "지역기반 관광정보 조회",
+                params: ["arrange", "contentTypeId", "areaCode", "sigunguCode", "cat1", "cat2", "cat3", "modifiedtime"]
+            },
+            "locationBasedList2": {
+                desc: "위치기반 관광정보 조회",
+                params: ["arrange", "contentTypeId", "mapX", "mapY", "radius", "modifiedtime"]
+            },
+            "searchKeyword2": {
+                desc: "키워드 검색 조회",
+                params: ["arrange", "contentTypeId", "keyword", "areaCode", "sigunguCode", "cat1", "cat2", "cat3"]
+            },
+            "searchFestival2": {
+                desc: "행사정보 조회",
+                params: ["arrange", "areaCode", "sigunguCode", "eventStartDate", "eventEndDate", "modifiedtime"]
+            },
+            "searchStay2": {
+                desc: "숙박정보 조회",
+                params: ["arrange", "areaCode", "sigunguCode", "hanOk", "benikia", "goodStay", "modifiedtime"]
+            },
+            "detailCommon2": {
+                desc: "공통정보 조회 (Detail)",
+                params: ["contentId"]
+            },
+            "detailIntro2": {
+                desc: "소개정보 조회",
+                params: ["contentId", "contentTypeId"]
+            },
+            "detailInfo2": {
+                desc: "상세정보 조회",
+                params: ["contentId", "contentTypeId"]
+            },
+            "detailImage2": {
+                desc: "이미지정보 조회",
+                params: ["contentId", "imageYN"]
+            },
+            "areaCode2": {
+                desc: "지역코드 조회",
+                params: ["numOfRows", "pageNo", "areaCode"]
+                // Note: numOfRows/pageNo already in common, but areaCode is specific here as optional filter
+            },
+            "categoryCode2": {
+                desc: "서비스 분류코드 조회",
+                params: ["contentTypeId", "cat1", "cat2", "cat3"]
+            },
+            "ldongCode2": {
+                desc: "법정동 코드 조회",
+                params: ["areaCode"]
+            },
+            "detailPetTour2": {
+                desc: "반려동물 여행정보 조회",
+                params: ["contentId"]
+            }
+        };
+
+        // Sigungu Data (Major Areas)
+        const sigunguMap = {
+            "1": [ // Seoul
+                { code: "1", name: "Gangnam-gu" }, { code: "2", name: "Gangdong-gu" }, { code: "3", name: "Gangbuk-gu" },
+                { code: "4", name: "Gangseo-gu" }, { code: "5", name: "Gwanak-gu" }, { code: "6", name: "Gwangjin-gu" },
+                { code: "7", name: "Guro-gu" }, { code: "8", name: "Geumcheon-gu" }, { code: "9", name: "Nowon-gu" },
+                { code: "10", name: "Dobong-gu" }, { code: "11", name: "Dongdaemun-gu" }, { code: "12", name: "Dongjak-gu" },
+                { code: "13", name: "Mapo-gu" }, { code: "14", name: "Seodaemun-gu" }, { code: "15", name: "Seocho-gu" },
+                { code: "16", name: "Seongdong-gu" }, { code: "17", name: "Seongbuk-gu" }, { code: "18", name: "Songpa-gu" },
+                { code: "19", name: "Yangcheon-gu" }, { code: "20", name: "Yeongdeungpo-gu" }, { code: "21", name: "Yongsan-gu" },
+                { code: "22", name: "Eunpyeong-gu" }, { code: "23", name: "Jongno-gu" }, { code: "24", name: "Jung-gu" },
+                { code: "25", name: "Jungnang-gu" }
+            ],
+            "6": [ // Busan
+                { code: "1", name: "Gangseo-gu" }, { code: "2", name: "Geumjeong-gu" }, { code: "3", name: "Gijang-gun" },
+                { code: "4", name: "Nam-gu" }, { code: "5", name: "Dong-gu" }, { code: "6", name: "Dongnae-gu" },
+                { code: "7", name: "Busanjin-gu" }, { code: "8", name: "Buk-gu" }, { code: "9", name: "Sasang-gu" },
+                { code: "10", name: "Saha-gu" }, { code: "11", name: "Seo-gu" }, { code: "12", name: "Suyeong-gu" },
+                { code: "13", name: "Yeonje-gu" }, { code: "14", name: "Yeongdo-gu" }, { code: "15", name: "Jung-gu" },
+                { code: "16", name: "Haeundae-gu" }
+            ],
+            "31": [ // Gyeonggi
+                { code: "1", name: "Gapyeong-gun" }, { code: "2", name: "Goyang-si" }, { code: "3", name: "Gwacheon-si" },
+                { code: "4", name: "Gwangmyeong-si" }, { code: "5", name: "Gwangju-si" }, { code: "6", name: "Guri-si" },
+                { code: "7", name: "Gunpo-si" }, { code: "8", name: "Gimpo-si" }, { code: "9", name: "Namyangju-si" },
+                { code: "10", name: "Dongducheon-si" }, { code: "11", name: "Bucheon-si" }, { code: "12", name: "Seongnam-si" },
+                { code: "13", name: "Suwon-si" }, { code: "14", name: "Siheung-si" }, { code: "15", name: "Ansan-si" },
+                { code: "16", name: "Anseong-si" }, { code: "17", name: "Anyang-si" }, { code: "18", name: "Yangju-si" },
+                { code: "19", name: "Yangpyeong-gun" }, { code: "20", name: "Yeoju-si" }, { code: "21", name: "Yeoncheon-gun" },
+                { code: "22", name: "Osan-si" }, { code: "23", name: "Yongin-si" }, { code: "24", name: "Uiwang-si" },
+                { code: "25", name: "Uijeongbu-si" }, { code: "26", name: "Icheon-si" }, { code: "27", name: "Paju-si" },
+                { code: "28", name: "Pyeongtaek-si" }, { code: "29", name: "Pocheon-si" }, { code: "30", name: "Hanam-si" },
+                { code: "31", name: "Hwaseong-si" }
+            ],
+            "39": [ // Jeju
+                { code: "3", name: "Seogwipo-si" }, { code: "4", name: "Jeju-si" }
+            ]
+        };
+
+        // Cat2 Data (Middle Category)
+        const cat2Map = {
+            "A01": [ // 자연
+                { code: "A0101", name: "자연관광지" }, { code: "A0102", name: "관광자원" }
+            ],
+            "A02": [ // 인문/문화/예술
+                { code: "A0201", name: "역사관광지" }, { code: "A0202", name: "휴양관광지" }, { code: "A0203", name: "체험관광지" },
+                { code: "A0204", name: "산업관광지" }, { code: "A0205", name: "건축/조형물" }, { code: "A0206", name: "문화시설" },
+                { code: "A0207", name: "축제" }, { code: "A0208", name: "공연/행사" }
+            ],
+            "A03": [ // 레포츠
+                { code: "A0301", name: "레포츠소개" }, { code: "A0302", name: "육상레포츠" }, { code: "A0303", name: "수상레포츠" },
+                { code: "A0304", name: "항공레포츠" }, { code: "A0305", name: "복합레포츠" }
+            ],
+            "A04": [ // 쇼핑
+                { code: "A0401", name: "쇼핑" }
+            ],
+            "A05": [ // 음식
+                { code: "A0501", name: "음식점" }
+            ],
+            "B02": [ // 숙박
+                { code: "B0201", name: "숙박시설" }
+            ],
+            "C01": [ // 추천코스
+                { code: "C0101", name: "코스" }
+            ]
+        };
+
+        // Cat3 Data (Small Category) - Representative Subset
+        const cat3Map = {
+            "A0101": [ // 자연관광지
+                { code: "A01010100", name: "국립공원" }, { code: "A01010200", name: "도립공원" }, { code: "A01010300", name: "군립공원" },
+                { code: "A01010400", name: "산" }, { code: "A01010500", name: "해수욕장" }, { code: "A01010600", name: "계곡" }
+            ],
+            "A0201": [ // 역사관광지
+                { code: "A02010100", name: "고궁" }, { code: "A02010200", name: "유적지/사적지" },
+                { code: "A02010700", name: "민속마을" }, { code: "A02010800", name: "생가" }
+            ],
+            "A0202": [ // 휴양관광지
+                { code: "A02020200", name: "관광단지" }, { code: "A02020700", name: "테마공원" }
+            ],
+            "A0206": [ // 문화시설
+                { code: "A02060100", name: "박물관" }, { code: "A02060200", name: "기념관" }, { code: "A02060300", name: "미술관" }
+            ],
+            "B0201": [ // 숙박시설
+                { code: "B02010100", name: "호텔" }, { code: "B02010700", name: "펜션" }, { code: "B02010200", name: "모텔" }
+            ]
+        };
+
+        // Parameter Metadata (Labels, Placeholders)
+        const paramMeta = {
+            "arrange": { label: "arrange (정렬)", default: "A", options: ["A", "C", "D", "O", "Q", "R"] },
+            "contentTypeId": {
+                label: "contentTypeId (관광타입)",
+                default: "12",
+                placeholder: "Select Type",
+                options: [
+                    { value: "", label: "전체 (All)" },
+                    { value: "12", label: "12 (관광지)" },
+                    { value: "14", label: "14 (문화시설)" },
+                    { value: "15", label: "15 (축제/공연/행사)" },
+                    { value: "25", label: "25 (여행코스)" },
+                    { value: "28", label: "28 (레포츠)" },
+                    { value: "32", label: "32 (숙박)" },
+                    { value: "38", label: "38 (쇼핑)" },
+                    { value: "39", label: "39 (음식)" }
+                ]
+            },
+            "areaCode": {
+                label: "areaCode (지역코드)",
+                placeholder: "Select Area",
+                options: [
+                    { value: "", label: "전체 (All)" },
+                    { value: "1", label: "1 (서울)" },
+                    { value: "2", label: "2 (인천)" },
+                    { value: "3", label: "3 (대전)" },
+                    { value: "4", label: "4 (대구)" },
+                    { value: "5", label: "5 (광주)" },
+                    { value: "6", label: "6 (부산)" },
+                    { value: "7", label: "7 (울산)" },
+                    { value: "8", label: "8 (세종)" },
+                    { value: "31", label: "31 (경기)" },
+                    { value: "32", label: "32 (강원)" },
+                    { value: "33", label: "33 (충북)" },
+                    { value: "34", label: "34 (충남)" },
+                    { value: "35", label: "35 (경북)" },
+                    { value: "36", label: "36 (경남)" },
+                    { value: "37", label: "37 (전북)" },
+                    { value: "38", label: "38 (전남)" },
+                    { value: "39", label: "39 (제주)" }
+                ]
+            },
+            "sigunguCode": {
+                label: "sigunguCode (시군구코드)",
+                placeholder: "Select Area First",
+                options: []
+            },
+            "cat1": {
+                label: "cat1 (대분류)",
+                placeholder: "Select Category",
+                options: [
+                    { value: "", label: "전체 (All)" },
+                    { value: "A01", label: "A01 (자연)" },
+                    { value: "A02", label: "A02 (인문/문화/예술)" },
+                    { value: "A03", label: "A03 (레포츠)" },
+                    { value: "A04", label: "A04 (쇼핑)" },
+                    { value: "A05", label: "A05 (음식)" },
+                    { value: "B02", label: "B02 (숙박)" },
+                    { value: "C01", label: "C01 (추천코스)" }
+                ]
+            },
+            "cat2": {
+                label: "cat2 (중분류)",
+                placeholder: "Select Cat1 First",
+                options: []
+            },
+            "cat3": {
+                label: "cat3 (소분류)",
+                placeholder: "Select Cat2 First",
+                options: []
+            },
+            "modifiedtime": { label: "modifiedtime", type: "date" },
+            "mapX": { label: "mapX (경도)", placeholder: "126.97...", default: "126.981611" },
+            "mapY": { label: "mapY (위도)", placeholder: "37.56...", default: "37.568477" },
+            "radius": { label: "radius (반경m)", default: "2000" },
+            "keyword": {
+                label: "keyword (검색어)",
+                default: "서울",
+                options: ["서울", "부산", "제주", "광주", "대구", "대전", "인천", "강원", "힐링", "축제", "호텔"]
+            },
+            "eventStartDate": { label: "eventStartDate", type: "date", default: "2026-01-01" },
+            "eventEndDate": { label: "eventEndDate", type: "date", default: "2026-12-31" },
+            "contentId": {
+                label: "contentId (콘텐츠ID)",
+                default: "126508",
+                options: [
+                    { value: "", label: "(Empty / List All)" },
+                    { value: "126508", label: "126508 (경복궁)" },
+                    { value: "126509", label: "126509 (창덕궁)" },
+                    { value: "125266", label: "125266 (국립중앙박물관)" },
+                    { value: "264337", label: "264337 (N서울타워)" },
+                    { value: "125534", label: "125534 (반려동물/Pet Sample)" }
+                ]
+            },
+            "imageYN": { label: "imageYN", default: "Y", options: ["Y", "N"] },
+            "hanOk": { label: "hanOk", default: "", placeholder: "(Optional)" },
+            "benikia": { label: "benikia", default: "", placeholder: "(Optional)" },
+            "goodStay": { label: "goodStay", default: "", placeholder: "(Optional)" }
+        };
+
+        const els = {
+            orgCode: document.getElementById('orgCode'),
+            serviceName: document.getElementById('serviceName'),
+            operation: document.getElementById('operation'),
+            serviceKey: document.getElementById('serviceKey'),
+            numOfRows: document.getElementById('numOfRows'),
+            pageNo: document.getElementById('pageNo'),
+            mobileOS: document.getElementById('mobileOS'),
+            mobileApp: document.getElementById('mobileApp'),
+            type: document.getElementById('type'),
+            dynamicParams: document.getElementById('dynamicParams'),
+            urlOutput: document.getElementById('urlOutput')
+        };
+
+        function init() {
+            // Populate Operation Dropdown
+            Object.keys(operationsMap).forEach(op => {
+                const opt = document.createElement('option');
+                opt.value = op;
+                opt.textContent = `${op} (${operationsMap[op].desc})`;
+                els.operation.appendChild(opt);
+            });
+
+            // Event Listeners
+            [els.orgCode, els.serviceName, els.operation, els.serviceKey, els.numOfRows, els.pageNo, els.mobileOS, els.mobileApp, els.type].forEach(el => {
+                el.addEventListener('input', updateUrl);
+            });
+
+            els.operation.addEventListener('change', renderDynamicParams);
+
+            // Initial Render
+            renderDynamicParams();
+            updateUrl();
+        }
+
+        function renderDynamicParams() {
+            const op = els.operation.value;
+            let requiredParams = operationsMap[op].params || [];
+
+            // Define Logical Order for Rendering
+            const paramOrder = [
+                "contentTypeId", "contentId",
+                "areaCode", "sigunguCode",
+                "cat1", "cat2", "cat3",
+                "keyword", "eventStartDate", "eventEndDate",
+                "mapX", "mapY", "radius",
+                "arrange", "modifiedtime"
+            ];
+
+            // Sort params based on priority
+            requiredParams.sort((a, b) => {
+                const idxA = paramOrder.indexOf(a);
+                const idxB = paramOrder.indexOf(b);
+                // If both in list, sort by index
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                // If only A in list, A comes first
+                if (idxA !== -1) return -1;
+                // If only B in list, B comes first
+                if (idxB !== -1) return 1;
+                // If neither, keep original order (or alphabetical?)
+                return 0;
+            });
+
+            els.dynamicParams.innerHTML = ''; // Clear
+
+            requiredParams.forEach(param => {
+                if (["numOfRows", "pageNo"].includes(param)) return; // Skip common overrides handled in base
+
+                const meta = paramMeta[param] || { label: param, placeholder: "" };
+
+                const div = document.createElement('div');
+                div.className = 'form-group';
+
+                const label = document.createElement('label');
+                label.textContent = meta.label;
+
+                let input;
+                if (meta.options) {
+                    input = document.createElement('select');
+                    meta.options.forEach(optItem => {
+                        const opt = document.createElement('option');
+                        // Handle both simple string array and object array {value, label}
+                        if (typeof optItem === 'object') {
+                            opt.value = optItem.value;
+                            opt.textContent = optItem.label;
+                            if (optItem.value === meta.default) opt.selected = true;
+                        } else {
+                            opt.value = optItem;
+                            opt.textContent = optItem;
+                            if (optItem === meta.default) opt.selected = true;
+                        }
+                        input.appendChild(opt);
+                    });
+                } else {
+                    input = document.createElement('input');
+                    input.type = meta.type || "text";
+                    input.placeholder = meta.placeholder || "";
+                    if (meta.default) input.value = meta.default;
+                }
+
+                input.id = `param_${param}`; // Unique ID for harvesting
+                input.dataset.paramName = param;
+
+                // Special Logic: Sigungu depends on Area
+                if (param === "areaCode") {
+                    input.addEventListener('change', updateSigunguOptions);
+                }
+                // Special Logic: Cat2 depends on Cat1
+                if (param === "cat1") {
+                    input.addEventListener('change', updateCat2Options);
+                }
+                // Special Logic: Cat3 depends on Cat2
+                if (param === "cat2") {
+                    input.addEventListener('change', updateCat3Options);
+                }
+
+                input.addEventListener('input', updateUrl);
+
+                // Progressive Disclosure: Hide dependent fields initially
+                if (["sigunguCode", "cat2", "cat3"].includes(param)) {
+                    div.style.display = 'none'; // Hidden by default
+                    div.id = `group_${param}`;  // ID for toggling
+                }
+
+                div.appendChild(label);
+                div.appendChild(input);
+                els.dynamicParams.appendChild(div);
+
+                // Trigger initial update for Sigungu/Cat2/Cat3 if it exists
+                if (param === "sigunguCode") {
+                    setTimeout(updateSigunguOptions, 0);
+                }
+                if (param === "cat2") {
+                    setTimeout(updateCat2Options, 0);
+                }
+                if (param === "cat3") {
+                    setTimeout(updateCat3Options, 0);
+                }
+            });
+
+            updateUrl();
+        }
+
+        function updateSigunguOptions() {
+            // Find inputs
+            const areaInput = document.querySelector('[data-param-name="areaCode"]');
+            const sigunguInput = document.querySelector('[data-param-name="sigunguCode"]');
+
+            if (!areaInput || !sigunguInput) return;
+
+            const areaCode = areaInput.value;
+            const list = sigunguMap[areaCode] || [];
+            const group = document.getElementById('group_sigunguCode');
+
+            // Clear current options
+            sigunguInput.innerHTML = '<option value="">전체 (All)</option>';
+
+            if (areaCode && list.length > 0) {
+                // Show and Populate
+                if (group) group.style.display = 'flex';
+
+                list.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.code;
+                    opt.textContent = `${item.code} (${item.name})`;
+                    sigunguInput.appendChild(opt);
+                });
+                sigunguInput.disabled = false;
+            } else {
+                // Hide or Disable
+                // If Area is selected but no Sigungu mapped, keep visible but disabled?
+                // Request says "Sequential", implies hiding until ready or valid.
+                // But for "All" area, Sigungu doesn't apply.
+                if (group) group.style.display = 'none';
+
+                sigunguInput.disabled = true;
+            }
+        }
+
+
+
+        function updateCat2Options() {
+            // Find inputs
+            const cat1Input = document.querySelector('[data-param-name="cat1"]');
+            const cat2Input = document.querySelector('[data-param-name="cat2"]');
+
+            if (!cat1Input || !cat2Input) return;
+
+            const cat1Code = cat1Input.value;
+            const list = cat2Map[cat1Code] || [];
+            const group = document.getElementById('group_cat2');
+
+            // Clear current options
+            cat2Input.innerHTML = '<option value="">전체 (All)</option>';
+
+            if (cat1Code && list.length > 0) {
+                if (group) group.style.display = 'flex';
+
+                list.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.code;
+                    opt.textContent = `${item.code} (${item.name})`;
+                    cat2Input.appendChild(opt);
+                });
+                cat2Input.disabled = false;
+            } else {
+                if (group) group.style.display = 'none';
+                cat2Input.disabled = true;
+            }
+            setTimeout(updateCat3Options, 0);
+        }
+
+        function updateCat3Options() {
+            // Find inputs
+            const cat2Input = document.querySelector('[data-param-name="cat2"]');
+            const cat3Input = document.querySelector('[data-param-name="cat3"]');
+
+            if (!cat2Input || !cat3Input) return;
+
+            const cat2Code = cat2Input.value;
+            const list = cat3Map[cat2Code] || [];
+            const group = document.getElementById('group_cat3');
+
+            // Clear current options
+            cat3Input.innerHTML = '<option value="">전체 (All)</option>';
+
+            if (cat2Code && list.length > 0) {
+                if (group) group.style.display = 'flex';
+
+                list.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.code;
+                    opt.textContent = `${item.code} (${item.name})`;
+                    cat3Input.appendChild(opt);
+                });
+                cat3Input.disabled = false;
+            } else {
+                if (group) group.style.display = 'none';
+                cat3Input.disabled = true;
+            }
+        }
+
+        function updateUrl() {
+            const org = els.orgCode.value;
+            const svc = els.serviceName.value;
+            const op = els.operation.value;
+            const key = els.serviceKey.value.trim();
+
+            // Base Query Params
+            const params = new URLSearchParams();
+            // Note: serviceKey often needs raw appending because of encoding issues, 
+            // but URLSearchParams handles standard encoding. 
+            // TourAPI expects DECODED key if using standard lib, OR we paste encoded key and don't re-encode.
+            // For simplicity in this builder, we will manually append serviceKey later or trust the user input.
+            // Let's stick to standard params first.
+
+            params.append("numOfRows", els.numOfRows.value);
+            params.append("pageNo", els.pageNo.value);
+            params.append("MobileOS", els.mobileOS.value);
+            params.append("MobileApp", els.mobileApp.value);
+            params.append("_type", els.type.value);
+
+            // Dynamic Params
+            const dynamicInputs = els.dynamicParams.querySelectorAll('[data-param-name]');
+            dynamicInputs.forEach(input => {
+                let val = input.value.trim();
+
+                // Special mapping for Date types: remove hyphens
+                if (input.type === 'date') {
+                    val = val.replace(/-/g, '');
+                }
+
+                if (val) {
+                    params.append(input.dataset.paramName, val);
+                }
+            });
+
+            // Construct Full URL
+            // We do not utilize params.toString() for serviceKey to avoid double-encoding if user provided an encoded key.
+            // Standard practice: User provides DECODED key -> We encode it. User provides ENCODED -> We use as is.
+            // Most users get confused. Best to put serviceKey first manually.
+
+            let queryString = params.toString();
+            // Prepend serviceKey manually to ensure it's handled safely if it contains %
+            // But for this GUI, let's assume standard behavior:
+            // If we treat it as a param, URLSearchParams encodes it.
+            // If content is already %, it becomes %25.
+            // TourAPI is sensitive. 
+            // Let's just generate the string.
+
+            const fullInit = `${BASE_URL}/${org}/${svc}/${op}`;
+            const finalUrl = `${fullInit}?serviceKey=${key}&${queryString}`;
+
+            els.urlOutput.textContent = finalUrl;
+        }
+
+        function copyUrl() {
+            const url = els.urlOutput.textContent.trim();
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.querySelector('button.secondary');
+                const original = btn.textContent;
+                btn.textContent = "Copied!";
+                setTimeout(() => btn.textContent = original, 2000);
+            });
+        }
+
+        function testCall() {
+            const url = els.urlOutput.textContent.trim();
+            window.open(url, '_blank');
+        }
+
+        async function checkStatus() {
+            const url = els.urlOutput.textContent.trim();
+            const statusEl = document.getElementById('statusOutput');
+
+            statusEl.innerHTML = '<span style="color: #60a5fa;">Checking... ⏳</span>';
+
+            try {
+                // Try simple fetch. 
+                // Note: CORS often blocks direct data access from browser to public APIs.
+                // We use 'no-cors' to at least check if network request sends without network error.
+                // However, 'no-cors' returns opaque response (status 0).
+                // Let's try standard first, catch error.
+
+                const response = await fetch(url, { method: 'GET' });
+
+                if (response.ok) {
+                    statusEl.innerHTML = `<span style="color: #4ade80;">🟢 Online (200 OK)</span>`;
+                } else {
+                    statusEl.innerHTML = `<span style="color: #f87171;">🔴 Service Reported Error (${response.status})</span>`;
+                }
+            } catch (err) {
+                console.warn("Fetch Error:", err);
+                // Likely CORS or Network
+                statusEl.innerHTML = `<span style="color: #fbbf24;">⚠️ Network/CORS: ${err.message}. <br>The link may still work in a new tab.</span>`;
+            }
+        }
+
+        // Init
+        init();
+
+    </script>
+
+</body>
+
+</html>
